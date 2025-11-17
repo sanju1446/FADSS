@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FADSS Ultra Login</title>
+
+<style>
+*{
+  margin:0; padding:0; box-sizing:border-box;
+  font-family:'Inter', sans-serif;
+}
+body{
+  height:100vh;
+  background:radial-gradient(circle at top, #0dd9e7 0%, #0b0e11 70%);
+  display:flex; justify-content:center; align-items:center;
+}
+
+/* === GLASS CARD === */
+.container{
+  width:380px;
+  padding:40px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  text-align:center;
+  animation:fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from{opacity:0; transform:scale(0.8);}
+  to{opacity:1; transform:scale(1);}
+}
+
+.title{
+  font-size:32px;
+  font-weight:900;
+  color:#0dd9e7;
+  margin-bottom:6px;
+}
+
+.subtitle{
+  color:#b5c5d0;
+  margin-bottom:24px;
+}
+
+/* INPUTS */
+input{
+  width:100%;
+  padding:14px;
+  margin:10px 0;
+  border-radius:12px;
+  border:none;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  font-size:15px;
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  margin-top:10px;
+  background:linear-gradient(135deg,#0dd9e7,#22c55e);
+  color:#012226;
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+  transition:0.25s;
+}
+button:hover{
+  transform:scale(1.05);
+}
+
+/* SWITCH LINK */
+.switch{
+  margin-top:14px;
+  color:#9fb0b8;
+  font-size:14px;
+}
+.switch span{
+  color:#0dd9e7;
+  cursor:pointer;
+  font-weight:700;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="loginBox">
+  <div class="title">FADSS Login</div>
+  <div class="subtitle">Welcome back, farmer.</div>
+
+  <input type="text" id="loginUser" placeholder="Username">
+  <input type="password" id="loginPass" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <div class="switch">Don’t have an account? <span onclick="showSignup()">Sign up</span></div>
+</div>
+
+
+<!-- SIGNUP -->
+<div class="container" id="signupBox" style="display:none;">
+  <div class="title">Create Account</div>
+  <div class="subtitle">Join the FADSS ecosystem</div>
+
+  <input type="text" id="signUser" placeholder="Username">
+  <input type="email" id="signEmail" placeholder="Email">
+  <input type="password" id="signPass" placeholder="Password">
+
+  <button onclick="signup()">Sign Up</button>
+
+  <div class="switch">Already have an account? <span onclick="showLogin()">Login</span></div>
+</div>
+
+<script>
+function showSignup(){
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("signupBox").style.display = "block";
+}
+
+function showLogin(){
+  document.getElementById("signupBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+function signup(){
+  const user = document.getElementById("signUser").value.trim();
+  const email = document.getElementById("signEmail").value.trim();
+  const pass = document.getElementById("signPass").value.trim();
+
+  if(!user || !email || !pass){
+    alert("Fill all fields");
+    return;
+  }
+
+  localStorage.setItem("fadss_user", user);
+  localStorage.setItem("fadss_pass", pass);
+
+  alert("Signup Successful!");
+  showLogin();
+}
+
+function login(){
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value.trim();
+
+  const savedU = localStorage.getItem("fadss_user");
+  const savedP = localStorage.getItem("fadss_pass");
+
+  if(u === savedU && p === savedP){
+    window.location.href = "dashboard.html"; // redirect
+  } else {
+    alert("Invalid Credentials");
+  }
+}
+</script>
+
+</body>
+</html>
