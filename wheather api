@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Farmer Advisory & Decision-Support – Weather Module</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2e7d32;
+      color: white;
+      padding: 16px 24px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    header p {
+      margin: 4px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 8px;
+      padding: 16px 20px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    label {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 8px 16px;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #256027;
+    }
+    .info {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: #c62828;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .location {
+      font-size: 14px;
+      margin: 10px 0 12px;
+      font-weight: bold;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      padding: 10px 12px;
+      background: #fafafa;
+      font-size: 13px;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: #1b5e20;
+    }
+    .card p {
+      margin: 3px 0;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 4px;
+      margin-top: 4px;
+    }
+    .tag-alert {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    .tag-ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .loader {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin: 10px 0 20px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Farmer Advisory & Decision-Support System (FADSS)</h1>
+  <p>Weather Forecast Integration – 7-Day Localized Farmer Advisory</p>
+</header>
+
+<div class="container">
+  <!-- Simple input form -->
+  <form id="weatherForm">
+    <div class="form-row">
+      <label for="city">Enter City / Village Name:</label>
+      <input id="city" type="text" placeholder="Eg: Guntur, Hyderabad, Vijayawada" />
+      <button type="submit">Get 7-Day Advisory</button>
+    </div>
+  </form>
+
+  <div class="info">
+    This module uses the Open-Meteo Weather API and Geocoding API to:
+    <ul>
+      <li>Display 7-day forecast (rainfall, max/min temperature, wind speed, humidity)</li>
+      <li>Issue simple alerts for heavy rain, frost risk, and irrigation need</li>
+    </ul>
+  </div>
+
+  <div id="loader" class="loader" style="display:none;">Loading weather data…</div>
+  <div id="error" class="error"></div>
+  <div id="location" class="location"></div>
+  <div id="results" class="cards"></div>
+</div>
+
+<footer>
+  FADSS – Weather Forecast Integration (Academic project demo using HTML + JavaScript + Open-Meteo API)
+</footer>
+
+<script>
+  // Main entry point: when user submits the form
+  document.getElementById("weatherForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const city = document.getElementById("city").value.trim();
+    const errorDiv = document.getElementById("error");
+    const locationDiv = document.getElementById("location");
+    const resultsDiv = document.getElementById("results");
+    const loader = document.getElementById("loader");
+
+    errorDiv.textContent = "";
+    locationDiv.textContent = "";
+    resultsDiv.innerHTML = "";
+
+    if (!city) {
+      errorDiv.textContent = "Please enter a city or village name.";
+      return;
+    }
+
+    try {
+      loader.style.display = "block";
+
+      // STEP 1: Geocoding – convert city name to latitude and longitude
+      const geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name="
+          + encodeURIComponent(city)
+          + "&count=1&language=en&format=json";
+
+      const geoResp = await fetch(geoUrl);
+      if (!geoResp.ok) {
+        throw new Error("Geocoding API error: " + geoResp.status);
+      }
+      const geoData = await geoResp.json();
+
+      if (!geoData.results || geoData.results.length === 0) {
+        throw new Error("No matching location found. Try a different city/village name.");
+      }
+
+      const place = geoData.results[0];
+      const lat = place.latitude;
+      const lon = place.longitude;
+      const placeName = place.name;
+      const country = place.country;
+      const timezone = place.timezone;
+
+      locationDiv.textContent =
+        "Location: " + placeName + ", " + country + " (Lat: " + lat.toFixed(2) +
+        ", Lon: " + lon.toFixed(2) + ", Timezone: " + timezone + ")";
+
+      // STEP 2: Weather Forecast – 7-day data
+      // Daily: rainfall (precipitation_sum), max/min temperature, max windspeed
+      // Hourly: humidity (relativehumidity_2m) to compute daily average humidity
+      const forecastUrl = "https://api.open-meteo.com/v1/forecast"
+        + "?latitude=" + lat
+        + "&longitude=" + lon
+        + "&hourly=temperature_2m,relativehumidity_2m,precipitation,windspeed_10m"
+        + "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max"
+        + "&forecast_days=7"
+        + "&timezone=auto";
+
+      const forecastResp = await fetch(forecastUrl);
+      if (!forecastResp.ok) {
+        throw new Error("Weather API error: " + forecastResp.status);
+      }
+      const data = await forecastResp.json();
+
+      // Compute daily average humidity from hourly values
+      const dailyHumidity = computeDailyAverageHumidity(
+        data.hourly.time,
+        data.hourly.relativehumidity_2m
+      );
+
+      // Render 7-day cards with advisory and alerts
+      renderForecastCards(data.daily, dailyHumidity);
+    } catch (err) {
+      console.error(err);
+      errorDiv.textContent = "Error: " + err.message;
+    } finally {
+      loader.style.display = "none";
+    }
+  });
+
+  /**
+   * Group hourly humidity values by date and compute daily averages.
+   * timeArray: ["2025-11-18T00:00", "2025-11-18T01:00", ...]
+   * humidityArray: [78, 80, ...]
+   * Returns: { "2025-11-18": 79.2, "2025-11-19": 82.5, ... }
+   */
+  function computeDailyAverageHumidity(timeArray, humidityArray) {
+    const groups = {};
+    for (let i = 0; i < timeArray.length; i++) {
+      const date = timeArray[i].split("T")[0]; // take only YYYY-MM-DD
+      const h = humidityArray[i];
+      if (!groups[date]) {
+        groups[date] = { sum: 0, count: 0 };
+      }
+      if (typeof h === "number") {
+        groups[date].sum += h;
+        groups[date].count += 1;
+      }
+    }
+
+    const avg = {};
+    for (const d in groups) {
+      avg[d] = groups[d].sum / groups[d].count;
+    }
+    return avg;
+  }
+
+  /**
+   * Create one card per day, including:
+   * - Date
+   * - Max temp, Min temp
+   * - Rainfall (mm)
+   * - Max windspeed
+   * - Avg humidity
+   * - Simple farmer advisory (irrigation / caution)
+   * - Alerts: heavy rain, frost risk, etc.
+   */
+  function renderForecastCards(daily, dailyHumidity) {
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    const dates = daily.time;
+    for (let i = 0; i < dates.length; i++) {
+      const date = dates[i];
+      const tMax = daily.temperature_2m_max[i];
+      const tMin = daily.temperature_2m_min[i];
+      const rain = daily.precipitation_sum[i]; // in mm
+      const wind = daily.windspeed_10m_max[i]; // in km/h (default)
+      const hum = dailyHumidity[date] || null;
+
+      const { alerts, advisory } = getFarmerAdvisory(tMax, tMin, rain, wind, hum);
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h3");
+      title.textContent = formatDateReadable(date);
+      card.appendChild(title);
+
+      const p1 = document.createElement("p");
+      p1.textContent = "Temperature: Max " + tMax.toFixed(1) + "°C, Min " + tMin.toFixed(1) + "°C";
+      card.appendChild(p1);
+
+      const p2 = document.createElement("p");
+      p2.textContent = "Rainfall: " + rain.toFixed(1) + " mm";
+      card.appendChild(p2);
+
+      const p3 = document.createElement("p");
+      p3.textContent = "Max Wind Speed: " + wind.toFixed(1) + " km/h";
+      card.appendChild(p3);
+
+      const p4 = document.createElement("p");
+      if (hum !== null && !isNaN(hum)) {
+        p4.textContent = "Avg Humidity: " + hum.toFixed(0) + " %";
+      } else {
+        p4.textContent = "Avg Humidity: (data not available)";
+      }
+      card.appendChild(p4);
+
+      const p5 = document.createElement("p");
+      p5.innerHTML = "<strong>Advisory:</strong> " + advisory;
+      card.appendChild(p5);
+
+      // Alerts tags
+      alerts.forEach(a => {
+        const tag = document.createElement("span");
+        tag.className = "tag " + (a.type === "OK" ? "tag-ok" : "tag-alert");
+        tag.textContent = a.label;
+        card.appendChild(tag);
+      });
+
+      resultsDiv.appendChild(card);
+    }
+  }
+
+  /**
+   * Simple farmer advisory rules based on:
+   * - Rainfall (mm)
+   * - Max/Min temperature (°C)
+   * - Max wind (km/h)
+   * - Avg humidity (%)
+   *
+   * You can extend these rules later with crop-specific logic or ML models.
+   */
+  function getFarmerAdvisory(tMax, tMin, rain, wind, hum) {
+    const alerts = [];
+    let advisory = "";
+
+    // Heavy rain / flood risk
+    if (rain >= 50) {
+      alerts.push({ type: "ALERT", label: "Heavy Rain / Flood Risk" });
+      advisory += "Very heavy rainfall expected. Avoid irrigation, protect low-lying fields, and ensure drainage is clear. ";
+    } else if (rain >= 20) {
+      alerts.push({ type: "ALERT", label: "Moderate to Heavy Rain" });
+      advisory += "Good rainfall expected. Postpone irrigation and avoid spraying pesticides during rainfall. ";
+    } else if (rain >= 3) {
+      alerts.push({ type: "OK", label: "Light to Moderate Rain" });
+      advisory += "Some rainfall expected. Reduce irrigation amount according to soil moisture. ";
+    } else {
+      alerts.push({ type: "OK", label: "Low Rain" });
+      advisory += "Very low rainfall expected. Plan irrigation if soil is dry and crop is at sensitive growth stage. ";
+    }
+
+    // Frost risk (simplified)
+    if (tMin <= 4) {
+      alerts.push({ type: "ALERT", label: "Frost Risk" });
+      advisory += "Minimum temperature is very low. For sensitive crops, consider protective measures at night. ";
+    }
+
+    // High temperature stress
+    if (tMax >= 38) {
+      alerts.push({ type: "ALERT", label: "Heat Stress" });
+      advisory += "High daytime temperature. Prefer irrigation in early morning or late evening to reduce stress. ";
+    }
+
+    // Wind advisory
+    if (wind >= 30) {
+      alerts.push({ type: "ALERT", label: "Strong Winds" });
+      advisory += "Strong winds expected. Avoid spraying pesticides/fertilizers and support weak plants if needed. ";
+    }
+
+    // Humidity disease risk (very simple check)
+    if (hum !== null && hum >= 80 && rain >= 3) {
+      alerts.push({ type: "ALERT", label: "High Disease Risk" });
+      advisory += "High humidity and rainfall can increase fungal disease risk. Monitor crops closely and consult expert if symptoms appear. ";
+    }
+
+    if (advisory === "") {
+      advisory = "Normal conditions. Follow regular irrigation and crop management schedule.";
+      alerts.push({ type: "OK", label: "Normal Conditions" });
+    }
+
+    return { alerts, advisory };
+  }
+
+  // Format yyyy-mm-dd into a more readable form
+  function formatDateReadable(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-IN", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  }
+</script>
+</body>
+</html>
