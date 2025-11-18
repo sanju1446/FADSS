@@ -27,6 +27,37 @@ body{
   border-bottom:1px solid rgba(255,255,255,0.08);
   z-index:100;
 }
+.profile-dropdown {
+  position:absolute;
+  top:70px;
+  right:40px;
+  background:#1a232a;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  width:170px;
+  display:none;
+  flex-direction:column;
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  animation:fadeIn 0.2s ease;
+}
+
+.profile-dropdown a {
+  padding:12px 15px;
+  color:#d2e4ec;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.profile-dropdown a:hover {
+  background:#0dd9e7;
+  color:#001f21;
+}
+
+@keyframes fadeIn {
+  from{opacity:0; transform:translateY(-5px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
 .navbar .logo{
   font-size:28px; font-weight:900; color:#0dd9e7;
   letter-spacing:-1px;
@@ -148,6 +179,8 @@ section{
 <!-- NAVBAR -->
 <div class="navbar">
   <div class="logo">FADSS</div>
+
+  
   <div class="links">
     <a href="#hero">Home</a>
     <a href="#dash">Dashboard</a>
@@ -155,6 +188,19 @@ section{
     <a href="#fields">Fields</a>
     <a href="#market">Market</a>
   </div>
+  <div class="profile-area" onclick="openProfile()" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+  <img id="navProfileImg" 
+       src="defaultpfp.png"
+       style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+  <span id="navProfileName" style="color:#0dd9e7; font-weight:700;">User</span>
+  </div>
+  <div class="profile-dropdown" id="dropdownMenu">
+  <a onclick="goProfile()">View Profile</a>
+  <a onclick="goEdit()">Edit Profile</a>
+  <a onclick="logout()">Logout</a>
+  </div>
+
+
 </div>
 
 <!-- HERO SECTION -->
@@ -242,6 +288,7 @@ section{
 </div>
 
 <script>
+/* === CHATBOT FUNCTIONS === */
 function toggleChat(){
   const chat = document.getElementById("chatWindow");
   chat.style.display = chat.style.display === "flex" ? "none" : "flex";
@@ -257,7 +304,49 @@ function sendMsg(){
   input.value = "";
   body.scrollTop = body.scrollHeight;
 }
+
+/* === PROFILE SYSTEM === */
+const user = localStorage.getItem("fadss_logged_user");
+const email = localStorage.getItem("fadss_logged_email");
+const pfp = localStorage.getItem("fadss_profile_img");
+
+// block dashboard if not logged in
+if (!user) {
+  window.location.href = "login.html";
+}
+
+// load username
+document.getElementById("navProfileName").innerText = user;
+
+// load profile pic if exists
+if (pfp) {
+  document.getElementById("navProfileImg").src = pfp;
+}
+
+// open profile page
+function openProfile() {
+  window.location.href = "profile.html";
+}
+function openProfile(){
+  const menu = document.getElementById("dropdownMenu");
+  menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+}
+
+function goProfile(){
+  window.location.href = "profile.html";
+}
+
+function goEdit(){
+  window.location.href = "edit.html";
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
 </script>
+
 
 </body>
 </html>

@@ -130,36 +130,50 @@ function showLogin(){
   document.getElementById("loginBox").style.display = "block";
 }
 
-function signup(){
-  const user = document.getElementById("signUser").value.trim();
-  const email = document.getElementById("signEmail").value.trim();
-  const pass = document.getElementById("signPass").value.trim();
+async function signup() {
+  const username = document.getElementById("signUser").value;
+  const email = document.getElementById("signEmail").value;
+  const password = document.getElementById("signPass").value;
 
-  if(!user || !email || !pass){
-    alert("Fill all fields");
-    return;
-  }
+  let res = await fetch("/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password })
+  });
 
-  localStorage.setItem("fadss_user", user);
-  localStorage.setItem("fadss_pass", pass);
+  let data = await res.json();
 
-  alert("Signup Successful!");
-  showLogin();
-}
-
-function login(){
-  const u = document.getElementById("loginUser").value.trim();
-  const p = document.getElementById("loginPass").value.trim();
-
-  const savedU = localStorage.getItem("fadss_user");
-  const savedP = localStorage.getItem("fadss_pass");
-
-  if(u === savedU && p === savedP){
-    window.location.href = "dashboard.html"; // redirect
+  if (data.success) {
+    alert("Signup successful!");
+    showLogin();
   } else {
-    alert("Invalid Credentials");
+    alert(data.msg);
   }
 }
+
+async function login() {
+  const username = document.getElementById("loginUser").value;
+  const password = document.getElementById("loginPass").value;
+
+  let res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  let data = await res.json();
+
+  if (data.success) {
+
+    // store username in localStorage for dashboard
+    localStorage.setItem("fadss_logged_user", username);
+
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Invalid username or password");
+  }
+}
+
 </script>
 
 </body>
