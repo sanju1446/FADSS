@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Profile - FADSS</title>
+<style>
+*{
+  margin:0; padding:0; box-sizing:border-box;
+  font-family: 'Inter', sans-serif;
+}
+body{
+  background:#0b0e11;
+  color:white;
+}
+
+/* COVER */
+.cover{
+  width:100%;
+  height:280px;
+  background:#222;
+  background-size:cover;
+  background-position:center;
+  position:relative;
+  z-index:5;
+}
+
+/* Edit cover */
+#editCoverBtn{
+  position:absolute;
+  bottom:15px;
+  right:20px;
+  padding:10px 18px;
+  background:#0dd9e7;
+  border:none;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+  color:#022326;
+  z-index:20;
+}
+#editCoverBtn:hover{
+  transform:scale(1.06);
+  background:#13f3ff;
+}
+
+/* Hidden file input */
+#uploadCover{
+  display:none;
+}
+
+/* PROFILE IMAGE */
+.profile-wrapper{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  position:relative;
+  top:-70px;
+  z-index:10;
+}
+
+.profile-img{
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  border:5px solid #0b0e11;
+  object-fit:cover;
+  box-shadow:0 0 20px #00eaff;
+}
+
+/* Edit PFP */
+#uploadPfp{
+  display:none;
+}
+.edit-pfp{
+  margin-top:10px;
+  background:#0dd9e7;
+  padding:8px 16px;
+  border:none;
+  cursor:pointer;
+  border-radius:10px;
+  font-weight:800;
+  color:#002d33;
+}
+.edit-pfp:hover{
+  transform:scale(1.05);
+}
+
+/* MAIN CARD */
+.card{
+  width:450px;
+  background:#0d1318;
+  padding:25px;
+  margin:auto;
+  border-radius:18px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.4);
+  position:relative;
+  top:-40px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  background:#111a20;
+  color:white;
+  border:none;
+  border-radius:10px;
+  margin:8px 0;
+}
+
+.save-btn{
+  width:100%;
+  padding:12px;
+  background:#0dd9e7;
+  border:none;
+  border-radius:10px;
+  font-weight:900;
+  color:#002e33;
+  cursor:pointer;
+}
+.save-btn:hover{
+  transform:scale(1.05);
+}
+
+.delete-btn{
+  width:100%;
+  padding:12px;
+  background:#ff3b30;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  font-weight:900;
+  color:white;
+  cursor:pointer;
+}
+.delete-btn:hover{
+  transform:scale(1.05);
+  background:#ff241b;
+}
+
+.username-display{
+  text-align:center;
+  font-size:24px;
+  margin-top:10px;
+  font-weight:900;
+}
+.email-display{
+  text-align:center;
+  color:#b5c5d0;
+  margin-bottom:20px;
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover" id="coverImg">
+  <button id="editCoverBtn">Edit Cover</button>
+  <input type="file" id="uploadCover" accept="image/*">
+</div>
+
+<!-- PROFILE PIC -->
+<div class="profile-wrapper">
+  <div style="text-align:center;">
+    <img id="pfp" class="profile-img">
+    <br>
+    <button class="edit-pfp" onclick="document.getElementById('uploadPfp').click()">Change Picture</button>
+    <button class="edit-pfp" style="background:#ff4d4d;margin-left:8px;" onclick="removePfp()">Remove</button>
+    <input type="file" id="uploadPfp" accept="image/*">
+  </div>
+</div>
+
+<!-- USER INFO + SETTINGS -->
+<div class="card">
+  <div class="username-display" id="displayName"></div>
+  <div class="email-display" id="displayEmail"></div>
+
+  <h3>Profile Settings</h3>
+
+  <input id="usernameInput" placeholder="Username">
+  <input id="emailInput" placeholder="Email">
+  <input id="passwordInput" type="password" placeholder="New Password (optional)">
+
+  <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+
+  <button class="delete-btn" onclick="deleteAccount()">Delete Account</button>
+</div>
+
+<script>
+/* LOAD DATA */
+const token = localStorage.getItem("fadss_token");
+
+if(!token){
+  window.location.href="login.html";
+}
+
+async function loadProfile(){
+  try {
+    const res = await fetch("/api/me", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error("Failed to load profile");
+    }
+    const u = data.user;
+
+    const user = u.username || localStorage.getItem("fadss_logged_user") || "";
+    const email = u.email || localStorage.getItem("fadss_logged_email") || "";
+
+    document.getElementById("displayName").innerText = user;
+    document.getElementById("displayEmail").innerText = email;
+
+    document.getElementById("usernameInput").value = user;
+    document.getElementById("emailInput").value = email;
+
+    // load profile pic from server (fallback to placeholder)
+    const pfpUrl = u.pfp || "https://via.placeholder.com/150";
+    document.getElementById("pfp").src = pfpUrl;
+
+    // keep username/email/pfp in localStorage for existing flows and navbar
+    localStorage.setItem("fadss_logged_user", user);
+    localStorage.setItem("fadss_logged_email", email);
+    localStorage.setItem("fadss_profile_img", u.pfp || "");
+  } catch {
+    window.location.href = "login.html";
+  }
+}
+
+loadProfile();
+
+/* CHANGE COVER */
+document.getElementById("editCoverBtn").onclick = () => {
+  document.getElementById("uploadCover").click();
+};
+
+document.getElementById("uploadCover").onchange = e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    localStorage.setItem("fadss_cover_img", reader.result);
+    document.getElementById("coverImg").style.backgroundImage = `url(${reader.result})`;
+  };
+  reader.readAsDataURL(file);
+};
+
+/* CHANGE PFP (upload to server) */
+document.getElementById("uploadPfp").onchange = async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const form = new FormData();
+  form.append("pfp", file);
+
+  try {
+    const res = await fetch("/api/profile/picture", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token },
+      body: form
+    });
+    const data = await res.json();
+    if (data.success && data.pfp) {
+      const url = data.pfp + "?t=" + Date.now();
+      document.getElementById("pfp").src = url;
+      localStorage.setItem("fadss_profile_img", data.pfp);
+    } else {
+      alert(data.msg || "Failed to upload picture");
+    }
+  } catch {
+    alert("Could not upload picture. Try again.");
+  }
+};
+
+async function removePfp(){
+  if(!confirm("Remove your profile picture?")) return;
+  try{
+    const res = await fetch("/api/profile/picture", {
+      method: "DELETE",
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById("pfp").src = "https://via.placeholder.com/150";
+      localStorage.removeItem("fadss_profile_img");
+    }else{
+      alert(data.msg || "Failed to remove picture");
+    }
+  }catch{
+    alert("Could not remove picture. Try again.");
+  }
+}
+
+/* SAVE SETTINGS */
+function saveSettings(){
+  const newUser = document.getElementById("usernameInput").value;
+  const newEmail = document.getElementById("emailInput").value;
+
+  if(newUser.trim() === "") return alert("Username can't be empty.");
+
+  localStorage.setItem("fadss_logged_user", newUser);
+  localStorage.setItem("fadss_logged_email", newEmail);
+
+  document.getElementById("displayName").innerText = newUser;
+  document.getElementById("displayEmail").innerText = newEmail;
+
+  alert("Profile updated!");
+}
+
+/* DELETE ACCOUNT */
+function deleteAccount(){
+  if(confirm("You sure you wanna delete your account? This can't be undone.")){
+    localStorage.clear();
+    window.location.href="login.html";
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Average Price Time Series",
+      "targets": []
+    },
+    {
+      "type": "singlestat",
+      "title": "Current Price",
+      "targets": []
+    }
+  ],
+  "schemaVersion": 16,
+  "title": "Crop Market Metrics"
+}

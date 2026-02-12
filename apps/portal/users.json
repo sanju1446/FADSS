@@ -1,0 +1,142 @@
+[
+  {
+    "id": "1763734359766",
+    "username": "reddyjash5",
+    "email": "reddyjash5@gmail.com",
+    "provider": "google",
+    "providerId": "104583405747352037186",
+    "resetCode": "356303",
+    "resetExpires": 1763741330617,
+    "isAdmin": true,
+    "pfp": null,
+    "city": "Kakinada",
+    "lastLogin": 1764928236485
+  },
+  {
+    "id": "1763742223430",
+    "username": "rahul",
+    "email": "rahulreddy140406@gmail.com",
+    "password": "rahul",
+    "isAdmin": true,
+    "pfp": null,
+    "city": null
+  },
+  {
+    "id": "1764311061623",
+    "username": "amoolyagajula",
+    "email": "amoolyagajula@gmail.com",
+    "provider": "google",
+    "providerId": "108574208682797000471",
+    "isAdmin": true,
+    "pfp": null,
+    "city": null,
+    "lastLogin": 1765033960717
+  },
+  {
+    "id": "1764491712092",
+    "username": "raitu bidda",
+    "email": "amma-vodi@gmail.com",
+    "password": "haha",
+    "isAdmin": false,
+    "pfp": "/uploads/pfp_1764491712092_1764923891691.jpg",
+    "city": null,
+    "lastLogin": 1764923950857,
+    "lastLocation": {
+      "city": null,
+      "lat": 17.397154,
+      "lon": 78.490021
+    }
+  },
+  {
+    "id": "1764492068401",
+    "username": "darke252006",
+    "email": "darke252006@gmail.com",
+    "provider": "google",
+    "providerId": "114784856638820930123",
+    "isAdmin": false,
+    "pfp": "/uploads/pfp_1764492068401_1764771655215.png",
+    "city": null,
+    "lastLocation": {
+      "lat": 17.397185844067305,
+      "lon": 78.49003811662315
+    },
+    "lastLogin": 1764928444077
+  },
+  {
+    "id": "1764498798343",
+    "username": "jashuu252006",
+    "email": "jashuu252006@gmail.com",
+    "provider": "google",
+    "providerId": "118385396098842295526",
+    "isAdmin": false,
+    "resetCode": "210758",
+    "resetExpires": 1764585648534,
+    "pfp": "/uploads/pfp_1764498798343_1764771935886.jpg",
+    "city": null,
+    "lastLocation": {
+      "city": null,
+      "lat": 17.396922636834375,
+      "lon": 78.49005286946358
+    },
+    "lastLogin": 1764928787789
+  },
+  {
+    "id": "1764565021860",
+    "username": "dhruti",
+    "email": "ddd123@gmail.com",
+    "password": "ddd123",
+    "isAdmin": false,
+    "pfp": null,
+    "city": null,
+    "lastLogin": 1764772867865,
+    "lastLocation": {
+      "lat": 17.370759831762744,
+      "lon": 78.52716459699823
+    }
+  },
+  {
+    "id": "1764785094357",
+    "username": "himasree",
+    "email": "Himasree",
+    "password": "Nanisai@1234",
+    "isAdmin": false,
+    "lastLogin": 1764786980241,
+    "lastLocation": {
+      "city": null,
+      "lat": 17.41551626077242,
+      "lon": 78.49761867858284
+    },
+    "pfp": "/uploads/pfp_1764785094357_1764786900722.jpg"
+  },
+  {
+    "id": "1764785386910",
+    "username": "himasreedamera",
+    "email": "himasreedamera@gmail.com",
+    "provider": "google",
+    "providerId": "106964446488415629737",
+    "isAdmin": false,
+    "lastLogin": 1764785386941
+  },
+  {
+    "id": "1764842495189",
+    "username": "sanjureddymgamer",
+    "email": "sanjureddymgamer@gmail.com",
+    "provider": "google",
+    "providerId": "101985232542730169595",
+    "isAdmin": false,
+    "lastLogin": 1764860465385
+  },
+  {
+    "id": "1765034035323",
+    "username": "Amoolya gajula",
+    "email": "amoolyag@gmail.com",
+    "password": "Ammu0809$",
+    "isAdmin": false,
+    "lastLogin": 1765087788343,
+    "lastLocation": {
+      "city": null,
+      "lat": 17.33946772174546,
+      "lon": 78.54987384414385
+    }
+  }
+]

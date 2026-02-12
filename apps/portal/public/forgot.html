@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Forgot Password</title>
+<style>
+body {
+  background:#0b0e11;
+  font-family: Arial;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box {
+  background:rgba(255,255,255,0.1);
+  padding:30px;
+  border-radius:15px;
+  width:330px;
+  text-align:center;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+}
+
+button {
+  width:100%;
+  margin-top:15px;
+  padding:12px;
+  border-radius:10px;
+  background:#0dd9e7;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Forgot Password</h2>
+  <p>Enter your email address</p>
+
+  <input id="email" type="email" placeholder="Email">
+
+  <button onclick="sendCode()">Send Code</button>
+
+  <p id="msg"></p>
+</div>
+
+<script>
+async function sendCode() {
+  const email = document.getElementById("email").value;
+  const msg = document.getElementById("msg");
+  msg.innerText = "";
+
+  try {
+    const res = await fetch("/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    let data;
+
+    // SAFELY parse JSON
+    try {
+      data = await res.json();
+    } catch {
+      msg.innerText = "Server error: backend didn't return JSON.";
+      return;
+    }
+
+    if (data.success) {
+      localStorage.setItem("reset_email", email);
+      window.location.href = "reset.html";
+    } else {
+      msg.innerText = data.msg || "Something went wrong.";
+    }
+
+  } catch (err) {
+    msg.innerText = "Network or server failure.";
+  }
+}
+</script>
+
+</body>
+</html>

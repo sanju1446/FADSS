@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us - FADSS</title>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #95a0b5;
+            --accent1: #22c1c3;
+            --accent2: #6a82fb;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-2: rgba(255, 255, 255, 0.03);
+            --radius: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, #071126 0%, #071a2b 100%);
+            color: #e8eef2;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* NAVBAR (Simplified for consistency) */
+        .navbar {
+            width: 100%;
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar .logo {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--accent1);
+            text-decoration: none;
+        }
+
+        .navbar .links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .navbar .links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .navbar .links a:hover {
+            color: var(--accent1);
+        }
+
+        /* CONTENT */
+        .container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--glass);
+            padding: 30px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: var(--glass-2);
+            border-color: var(--accent1);
+        }
+
+        .card h2 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            color: var(--muted);
+            font-size: 14px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <a href="dashboard.html" class="logo">FADSS 🌤️</a>
+        <div class="links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="recommendations/crop.html">Recommendations</a>
+            <a href="#" style="color:var(--accent1)">About Us</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Empowering Farmers</h1>
+            <p>The Farmer Advisory Decision Support System (FADSS) bridges the gap between technology and agriculture,
+                providing real-time insights for a sustainable future.</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2><span class="icon">🌾</span> Smart Crop Suggestions</h2>
+                <p>Our AI-driven model analyzes soil nutrients (N, P, K), pH levels, and weather conditions to recommend
+                    the most suitable crops for your land, ensuring maximum yield.</p>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🧪</span> Fertilizer Guide</h2>
+                <p>Correct fertilization is key to soil health. We provide precise fertilizer recommendations tailored
+                    to the specific crop and soil needs, reducing waste and cost.</p>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">👨‍🌾</span> Farmer Support</h2>
+                <p>Built with farmers in mind, our system simplifies complex data into actionable advice. Whether it's
+                    pest alerts or market trends, FADSS is your digital companion.</p>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">📈</span> Market Insights</h2>
+                <p>Stay ahead with real-time market price trends. Make informed decisions on when to sell your produce
+                    to get the best profit margins.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2025 FADSS. Developed for Smarter Agriculture.
+        </div>
+    </div>
+
+</body>
+
+</html>

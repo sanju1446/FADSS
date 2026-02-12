@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FADSS Ultra Dashboard</title>
+
+  <style>
+    /* === THEME TOKENS (same as login page) === */
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #95a0b5;
+      --accent1: #22c1c3;
+      --accent2: #6a82fb;
+      --glass: rgba(255, 255, 255, 0.04);
+      --glass-2: rgba(255, 255, 255, 0.03);
+      --success: #4ade80;
+      --danger: #fb7185;
+      --radius: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* RESET */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: url("dashboard.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: #e8eef2;
+      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 17, 38, 0.65);
+      /* dark glass overlay */
+      z-index: -1;
+    }
+
+
+
+    /* === NAVBAR === */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(140%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .navbar .logo {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--accent1);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    /* Nav links */
+    .navbar .links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .navbar .links a {
+      text-decoration: none;
+      color: var(--muted);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      position: relative;
+      transition: 0.25s;
+    }
+
+    .navbar .links a::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 0%;
+      height: 2px;
+      background: var(--accent1);
+      transform: translateX(-50%);
+      transition: 0.3s ease;
+    }
+
+    .navbar .links a:hover::after {
+      width: 70%;
+    }
+
+    /* Search bar */
+    .nav-search {
+      background: var(--glass);
+      padding: 8px 16px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 260px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-search input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e5f7ff;
+    }
+
+    .nav-search-icon {
+      color: var(--accent1);
+    }
+
+    /* Profile dropdown */
+    .profile-dropdown {
+      position: absolute;
+      top: 70px;
+      right: 40px;
+      background: var(--glass);
+      backdrop-filter: blur(14px) saturate(140%);
+      width: 170px;
+      display: none;
+      flex-direction: column;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      animation: fadeIn 0.2s ease;
+    }
+
+    .profile-dropdown a {
+      padding: 12px 15px;
+      color: #d2e4ec;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .profile-dropdown a:hover {
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      color: #021024;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    section {
+      padding: 120px 60px;
+      min-height: 100vh;
+    }
+
+    .section-title {
+      font-size: 34px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+    }
+
+    /* Dashboard cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .card {
+      background: var(--glass);
+      padding: 24px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px) saturate(140%);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      transition: 0.25s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    .card h3 {
+      color: #fff;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: var(--muted);
+    }
+
+    /* Chatbot */
+    /* === CHATBOT FLOATING BUTTON === */
+    .chatbot {
+      position: fixed;
+      bottom: 26px;
+      right: 26px;
+      width: 68px;
+      height: 68px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      background: radial-gradient(circle at 0% 0%, var(--accent1), var(--accent2));
+      cursor: pointer;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+      font-size: 30px;
+      z-index: 220;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+      animation: chat-float 3s ease-in-out infinite;
+    }
+
+    .chatbot::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: inherit;
+      background: radial-gradient(circle, rgba(34, 193, 195, 0.6), transparent 70%);
+      opacity: 0.4;
+      filter: blur(10px);
+      z-index: -1;
+    }
+
+    .chatbot:hover {
+      transform: translateY(-4px) scale(1.06);
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.85);
+      filter: brightness(1.1);
+    }
+
+    @keyframes chat-float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    /* === CHAT WINDOW SHELL === */
+    .chat-window {
+      position: fixed;
+      bottom: 110px;
+      right: 26px;
+      width: 360px;
+      max-width: calc(100% - 60px);
+      height: 430px;
+      background: radial-gradient(circle at top left, rgba(106, 130, 251, 0.25), rgba(11, 18, 32, 0.95));
+      border-radius: 22px;
+      display: none;
+      /* still controlled by JS toggleChat() */
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+      z-index: 210;
+      backdrop-filter: blur(18px) saturate(160%);
+    }
+
+    /* Optional: if you later use a CSS class toggle instead of display */
+    .chat-window.open {
+      display: flex;
+      animation: chat-pop 0.22s ease-out;
+    }
+
+    @keyframes chat-pop {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* === CHAT HEADER === */
+    .chat-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(120deg,
+          rgba(34, 193, 195, 0.35),
+          rgba(106, 130, 251, 0.15),
+          rgba(0, 0, 0, 0.4));
+    }
+
+    .chat-header::after {
+      content: "● Online";
+      font-size: 11px;
+      color: #4ade80;
+      letter-spacing: 0.03em;
+    }
+
+    /* === CHAT BODY === */
+    .chat-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Nice scrollbar */
+    .chat-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-body::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .chat-body::-webkit-scrollbar-thumb {
+      background: linear-gradient(var(--accent1), var(--accent2));
+      border-radius: 999px;
+    }
+
+    /* === MESSAGE BUBBLES (matches your JS classes) === */
+    .msg {
+      max-width: 82%;
+      padding: 8px 11px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.4;
+      position: relative;
+      animation: bubble-in 0.18s ease-out;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    /* User message (you) – .msg user-msg from JS */
+    .msg.user-msg,
+    .chat-body .user-msg {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #021024;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    }
+
+    .msg.user-msg::after,
+    .chat-body .user-msg::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      bottom: 4px;
+      width: 10px;
+      height: 10px;
+      background: inherit;
+      border-radius: 2px;
+      transform: skewX(-25deg);
+    }
+
+    /* Bot message – .msg bot-msg from JS */
+    .msg.bot-msg,
+    .chat-body .bot-msg {
+      align-self: flex-start;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: #e5edff;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+    }
+
+    .msg.bot-msg::before,
+    .chat-body .bot-msg::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      bottom: 4px;
+      width: 10px;
+      height: 10px;
+      background: inherit;
+      border-radius: 2px;
+      transform: skewX(25deg);
+    }
+
+    /* "Thinking..." bubble (your typing placeholder already uses bot-msg) */
+    .msg.bot-msg.typing {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .msg.bot-msg.typing::after {
+      content: "● ● ●";
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+    }
+
+    /* Entry animation for messages */
+    @keyframes bubble-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* === CHAT INPUT AREA === */
+    .chat-input {
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 9px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      outline: none;
+      background: rgba(15, 23, 42, 0.8);
+      color: #e8eef2;
+      font-size: 13px;
+      transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .chat-input input::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    .chat-input input:focus {
+      border-color: var(--accent1);
+      box-shadow: 0 0 0 1px rgba(34, 193, 195, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .chat-input button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(120deg, var(--accent1), var(--accent2));
+      color: #021024;
+      font-weight: 700;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .chat-input button::after {
+      content: "↗";
+      font-size: 11px;
+    }
+
+    .chat-input button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7);
+      filter: brightness(1.08);
+    }
+
+    .chat-input button:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+    }
+
+
+    /* ===== WEATHER SIDE PANEL ===== */
+
+    .weather-panel {
+      position: fixed;
+      top: 0;
+      left: -400px;
+      width: 360px;
+      height: 100vh;
+      background: var(--glass);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 30px 26px;
+      box-shadow: 10px 0px 45px rgba(0, 0, 0, 0.55);
+      transition: 0.35s ease;
+      z-index: 300;
+      overflow-y: auto;
+    }
+
+    .weather-panel.open {
+      left: 0;
+    }
+
+    .weather-panel h2 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    /* BACKDROP */
+    .weather-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s ease-in-out;
+      z-index: 200;
+    }
+
+    .weather-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ===== DAILY CARDS (MATCH DASHBOARD CARDS 1:1) ===== */
+    .weather-day {
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(160%);
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      margin-bottom: 20px;
+      transition: 0.25s;
+    }
+
+    .weather-day:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    .weather-day h3 {
+      color: #fff;
+      font-size: 18px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .weather-day p {
+      font-size: 15px;
+      color: var(--muted);
+      margin: 3px 0;
+    }
+
+    .weather-day h3 {
+      margin-bottom: 6px;
+      color: white;
+      font-size: 16px;
+    }
+
+    .broadcast-banner {
+      margin: 90px 60px 0;
+      padding: 18px 24px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(120deg, var(--accent1), var(--accent2));
+      color: #021024;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      display: none;
+    }
+
+    .broadcast-banner .banner-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .broadcast-banner .banner-time {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 6px;
+    }
+
+    /* small screens */
+    @media (max-width: 600px) {
+      section {
+        padding: 100px 18px;
+      }
+
+      .nav-search {
+        display: none;
+      }
+
+      .navbar {
+        padding: 0 18px;
+      }
+
+      .profile-dropdown {
+        right: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- WEATHER PANEL + OVERLAY -->
+  <div class="weather-panel" id="weatherPanel" aria-hidden="true">
+    <h2>7-Day Forecast</h2>
+    <div id="weatherList"></div>
+  </div>
+  <div class="weather-overlay" id="weatherOverlay" onclick="closeWeatherPanel()"></div>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo" id="weatherIcon" tabindex="0" title="Open weather panel">
+      FADSS <span style="font-size:22px;">🌤️</span>
+    </div>
+
+    <div class="links">
+      <a href="#dash">Dashboard</a>
+      <a href="about.html">About Us</a>
+    </div>
+
+    <div class="profile-area" id="profileArea" style="display:flex;align-items:center;gap:10px;cursor:pointer;"
+      aria-haspopup="true" aria-expanded="false" onclick="openProfile()">
+      <img id="navProfileImg" src="https://via.placeholder.com/80"
+        style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span id="navProfileName" style="color:#0dd9e7;font-weight:700;">User</span>
+    </div>
+
+    <div class="profile-dropdown" id="dropdownMenu" aria-hidden="true">
+      <a onclick="goProfile()">View Profile</a>
+      <a onclick="goEdit()">Edit Profile</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </div>
+
+  <div id="broadcastBanner" class="broadcast-banner" role="status" aria-live="polite">
+    <div class="banner-title">Admin Broadcast</div>
+    <div id="broadcastMessage"></div>
+    <div id="broadcastTime" class="banner-time"></div>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <section id="dash">
+    <h2 class="section-title">Dashboard Overview</h2>
+    <p class="section-desc">Live analytics from weather, soil health, and crop conditions.</p>
+
+    <div class="grid">
+      <div class="card" onclick="window.location.href='climate.html'">
+        <h3>Weather Forecast</h3>
+        <p>Tap to open detailed climate page.</p>
+      </div>
+
+      <div class="card" onclick="window.location.href='/recommendations/crop.html'">
+        <h3>Crop & Fertilizer Recs</h3>
+        <p>Get AI-based crop and fertilizer suggestions.</p>
+      </div>
+      <div class="card" onclick="window.location.href='http://localhost:3001'">
+        <h3>Market Price & Trends</h3>
+        <p>Paddy rising. Ideal selling window: 3–5 days.</p>
+      </div>
+      <div class="card" onclick="window.location.href='pest.html'">
+        <h3>Pest Alerts</h3>
+        <p>Aphids detected in Field B. Scout and treat.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hidden placeholder sections -->
+  <section id="recs" style="display:none;"></section>
+  <section id="fields" style="display:none;"></section>
+  <section id="market" style="display:none;"></section>
+
+  <!-- CHATBOT -->
+  <div class="chatbot" onclick="toggleChat()">💬</div>
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">FADSS Bot</div>
+    <div class="chat-body" id="chatBody">How can I assist you?</div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Ask something..." />
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+
+
+  <script>
+    /* === CHATBOT === */
+    function toggleChat() {
+      const chat = document.getElementById("chatWindow");
+      chat.style.display = chat.style.display === "flex" ? "none" : "flex";
+    }
+    async function sendMsg() {
+      const input = document.getElementById("chatInput");
+      const body = document.getElementById("chatBody");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      // show user message
+      body.innerHTML += `<div class="msg user-msg">${text}</div>`;
+      input.value = "";
+      body.scrollTop = body.scrollHeight;
+
+      // show temporary "thinking..."
+      const typingId = "typing-" + Date.now();
+      body.innerHTML += `<div id="${typingId}" class="msg bot-msg">Thinking...</div>`;
+      body.scrollTop = body.scrollHeight;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+            // If you want to protect it with JWT:
+            // "Authorization": "Bearer " + localStorage.getItem("fadss_token")
+          },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+
+        if (data.success) {
+          body.innerHTML += `<div class="msg bot-msg">${data.reply}</div>`;
+        } else {
+          body.innerHTML += `<div class="msg bot-msg">Error: ${data.msg || "Something went wrong"}</div>`;
+        }
+      } catch (err) {
+        console.error(err);
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+        body.innerHTML += `<div class="msg bot-msg">Network error.</div>`;
+      }
+
+      body.scrollTop = body.scrollHeight;
+    }
+
+
+    /* === PROFILE === */
+    async function loadUserProfile() {
+      const user = localStorage.getItem("fadss_logged_user");
+      const token = localStorage.getItem("fadss_token");
+
+      if (!user || !token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("navProfileName").innerText = user;
+
+      // Fetch profile picture from backend
+      try {
+        const res = await fetch("/api/me", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (data.success && data.user.pfp) {
+          document.getElementById("navProfileImg").src = data.user.pfp;
+          localStorage.setItem("fadss_profile_img", data.user.pfp);
+        } else {
+          const pfp = localStorage.getItem("fadss_profile_img");
+          if (pfp) {
+            document.getElementById("navProfileImg").src = pfp;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load profile picture", err);
+        const pfp = localStorage.getItem("fadss_profile_img");
+        if (pfp) {
+          document.getElementById("navProfileImg").src = pfp;
+        }
+      }
+    }
+
+    loadUserProfile();
+
+    function openProfile() {
+      const menu = document.getElementById("dropdownMenu");
+      const isClosed = menu.style.display === "none" || menu.style.display === "";
+      menu.style.display = isClosed ? "flex" : "none";
+
+      // Accessibility
+      document.getElementById("profileArea").setAttribute("aria-expanded", isClosed);
+      menu.setAttribute("aria-hidden", !isClosed);
+    }
+
+    function goProfile() { window.location.href = "profile.html"; }
+    function goEdit() { window.location.href = "edit.html"; }
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    /* === WEATHER PANEL FUNCTIONALITY === */
+    document.getElementById("weatherIcon").onclick = openWeatherPanel;
+
+    function openWeatherPanel() {
+      document.getElementById("weatherPanel").classList.add("open");
+      document.getElementById("weatherOverlay").classList.add("show");
+      document.getElementById("weatherPanel").setAttribute("aria-hidden", "false");
+      loadCurrentLocationWeather();
+    }
+    function closeWeatherPanel() {
+      document.getElementById("weatherPanel").classList.remove("open");
+      document.getElementById("weatherOverlay").classList.remove("show");
+      document.getElementById("weatherPanel").setAttribute("aria-hidden", "true");
+    }
+
+    function loadCurrentLocationWeather() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          // Send only lat/lon to backend for admin tracking
+          const token = localStorage.getItem("fadss_token");
+          if (token) {
+            fetch("/user/location", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ lat, lon })
+            });
+          }
+          fetchWeather(lat, lon);
+        },
+        () => alert("Enable GPS to load weather.")
+      );
+    }
+
+    async function fetchWeather(lat, lon) {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto&forecast_days=7`;
+        const res = await fetch(url);
+        const data = await res.json();
+        renderWeather(data.daily);
+      } catch (e) {
+        console.error("Weather fetch failed", e);
+      }
+    }
+
+    function renderWeather(daily) {
+      const list = document.getElementById("weatherList");
+      list.innerHTML = "";
+      if (!daily) return;
+
+      for (let i = 0; i < daily.time.length; i++) {
+        const d = document.createElement("div");
+        d.className = "weather-day";
+        d.innerHTML = `
+      <h3>${formatDate(daily.time[i])}</h3>
+      <p>Temp: ${daily.temperature_2m_max[i]}°C / ${daily.temperature_2m_min[i]}°C</p>
+      <p>Rain: ${daily.precipitation_sum[i]} mm</p>
+      <p>Wind: ${daily.windspeed_10m_max[i]} km/h</p>
+    `;
+        list.appendChild(d);
+      }
+    }
+    function formatDate(ds) {
+      const d = new Date(ds);
+      return d.toLocaleDateString("en-IN", {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    /* === BROADCAST BANNER === */
+    async function loadBroadcastBanner() {
+      try {
+        const res = await fetch("/broadcast/latest");
+        const data = await res.json();
+        if (data && data.message) {
+          const banner = document.getElementById("broadcastBanner");
+          document.getElementById("broadcastMessage").innerText = data.message;
+          document.getElementById("broadcastTime").innerText = data.timestamp ? `Posted ${formatBroadcastTime(data.timestamp)}` : "";
+          banner.style.display = "block";
+        }
+      } catch (err) {
+        console.warn("Broadcast fetch failed", err);
+      }
+    }
+
+    function formatBroadcastTime(ts) {
+      const d = new Date(ts);
+      if (isNaN(d)) return "";
+      return d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+    }
+
+    loadBroadcastBanner();
+  </script>
+
+</body>
+
+</html>

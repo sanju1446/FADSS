@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FADSS Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+:root {
+  --bg: #0f1724;
+  --card: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.1);
+  --accent1: #22c1c3;
+  --accent2: #6a82fb;
+  --radius: 16px;
+  --muted: #9aa6b8;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: var(--bg);
+  color: #eef3fc;
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: rgba(255,255,255,0.05);
+  border-right: 1px solid var(--border);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 22px;
+  margin-bottom: 25px;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+  padding: 14px;
+  border: none;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #021024;
+}
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 15px;
+}
+
+/* SEARCH BAR */
+#searchBar {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  font-size: 15px;
+  margin-bottom: 20px;
+  outline: none;
+}
+
+/* USER LIST */
+.user-list {
+  padding: 20px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.user-card:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* PROFILE PIC */
+.pfp {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+/* DETAILS PANEL */
+.details-box {
+  margin-top: 30px;
+  padding: 22px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.detail-line {
+  font-size: 15px;
+  margin: 8px 0;
+}
+
+.broadcast-box textarea {
+  width: 100%;
+  min-height: 90px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.08);
+  padding: 12px;
+  color: #fff;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.city-tag {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.email-tag {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  margin-top: 10px;
+  cursor: pointer;
+  border: none;
+}
+
+.delete-btn { background: #ff4d4d; color: #fff; }
+.admin-btn { background: var(--accent1); color: #021024; }
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>Admin Panel</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="section-title">All Users</div>
+
+  <input id="searchBar" type="text" placeholder="Search users..." oninput="filterUsers()">
+
+  <div id="userList" class="user-list">Loading...</div>
+
+  <div class="section-title">User Details</div>
+
+  <div id="userDetails" class="details-box">Select a user</div>
+
+  <div class="section-title">Broadcast Message</div>
+  <div class="details-box broadcast-box">
+    <textarea id="broadcastInput" placeholder="Type message to show all users on login..."></textarea>
+    <button class="btn admin-btn" onclick="sendBroadcast()">Send Broadcast</button>
+    <p id="broadcastStatus" class="detail-line"></p>
+  </div>
+
+</div>
+
+<script>
+
+/* -----------------------------------------
+   BLOCK NON-ADMINS
+----------------------------------------- */
+if (localStorage.getItem("fadss_isAdmin") !== "true") {
+  window.location.href = "login.html";
+}
+
+/* -----------------------------------------
+   FETCH + RENDER USERS
+----------------------------------------- */
+/* -----------------------------------------
+   FETCH + RENDER USERS
+----------------------------------------- */
+let allUsers = [];
+let currentUserId = null;
+
+async function loadUsers() {
+  const token = localStorage.getItem("fadss_token");
+
+  const res = await fetch("/admin/users", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const data = await res.json();
+  if (!data.success) return;
+
+  // ONLY SHOW NON-ADMIN USERS
+  allUsers = data.users.filter(u => !u.isAdmin);
+
+  renderUsers(allUsers);
+}
+
+
+function renderUsers(users) {
+  let html = "";
+
+  users.forEach(u => {
+    html += `
+      <div class="user-card" onclick="showUser('${u.id}')">
+        <img src="${u.pfp || "https://via.placeholder.com/80"}" class="pfp">
+        <div>
+          <div style="font-size:18px; font-weight:700;">${u.username}</div>
+          <div class="city-tag">📍 ${u.city || "Unknown City"}</div>
+          <div class="email-tag">${u.email}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("userList").innerHTML = html;
+}
+
+/* -----------------------------------------
+   SEARCH FILTER
+----------------------------------------- */
+function filterUsers() {
+  const q = searchBar.value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    u.username.toLowerCase().includes(q) ||
+    u.email.toLowerCase().includes(q) ||
+    (u.city || "").toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+}
+
+/* -----------------------------------------
+   SHOW USER DETAILS
+----------------------------------------- */
+async function showUser(id) {
+  currentUserId = id;
+  const token = localStorage.getItem("fadss_token");
+
+  const res = await fetch("/admin/users", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const data = await res.json();
+  const user = data.users.find(u => u.id === id);
+
+  document.getElementById("userDetails").innerHTML = `
+    <img src="${user.pfp || "https://via.placeholder.com/80"}" class="pfp" style="width:60px;height:60px;margin-bottom:10px;">
+    <p class="detail-line"><strong>Username:</strong> ${user.username}</p>
+    <p class="detail-line"><strong>Email:</strong> ${user.email}</p>
+    <p class="detail-line"><strong>Last Login:</strong> ${user.lastLogin ? (new Date(user.lastLogin)).toLocaleString() : "Never"}</p>
+    <p class="detail-line"><strong>Last Location:</strong> ${user.lastLocation ? `Lat: ${user.lastLocation.lat ? user.lastLocation.lat.toFixed(5) : "-"}, Lon: ${user.lastLocation.lon ? user.lastLocation.lon.toFixed(5) : "-"}` : "Unknown"}</p>
+
+    <button class="btn delete-btn" onclick="deleteUser('${id}')">Delete User</button>
+
+    ${
+      user.isAdmin
+      ? `<button class="btn admin-btn" onclick="removeAdmin('${id}')">Remove Admin</button>`
+      : `<button class="btn admin-btn" onclick="makeAdmin('${id}')">Make Admin</button>`
+    }
+  `;
+}
+
+/* -----------------------------------------
+   ADMIN ACTIONS
+----------------------------------------- */
+async function deleteUser(id) {
+  if (!confirm("Delete this user?")) return;
+
+  const token = localStorage.getItem("fadss_token");
+  await fetch("/admin/user/" + id, {
+    method: "DELETE",
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  loadUsers();
+  userDetails.innerHTML = "Select a user";
+}
+
+async function makeAdmin(id) {
+  const token = localStorage.getItem("fadss_token");
+  await fetch("/admin/make-admin/" + id, {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token }
+  });
+  loadUsers();
+  showUser(id);
+}
+
+async function removeAdmin(id) {
+  const token = localStorage.getItem("fadss_token");
+  await fetch("/admin/remove-admin/" + id, {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token }
+  });
+  loadUsers();
+  showUser(id);
+}
+
+/* -----------------------------------------
+   LOGOUT
+----------------------------------------- */
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+/* -----------------------------------------
+   BROADCAST MESSAGE
+----------------------------------------- */
+async function sendBroadcast() {
+  const messageBox = document.getElementById("broadcastInput");
+  const status = document.getElementById("broadcastStatus");
+  const message = messageBox.value.trim();
+  const token = localStorage.getItem("fadss_token");
+
+  if (!message) {
+    status.textContent = "Enter a message before sending.";
+    return;
+  }
+
+  if (!token) {
+    status.textContent = "Login again to send broadcasts.";
+    return;
+  }
+
+  status.textContent = "Scheduling broadcast...";
+
+  try {
+    const res = await fetch("/broadcast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.detail || "Failed to schedule broadcast.";
+      return;
+    }
+
+    messageBox.value = "";
+    const taskId = data.task_id ? ` (task: ${data.task_id})` : "";
+    status.textContent = "Broadcast queued successfully" + taskId + ".";
+  } catch (err) {
+    status.textContent = "Could not reach broadcast service. Ensure FastAPI + Celery are running.";
+  }
+}
+
+/* -----------------------------------------
+   AUTO LOAD USERS
+----------------------------------------- */
+loadUsers();
+
+// Periodically refresh user list so last login/location stay up to date
+setInterval(() => {
+  loadUsers();
+  if (currentUserId) {
+    showUser(currentUserId);
+  }
+}, 10000);
+
+</script>
+
+</body>
+</html>

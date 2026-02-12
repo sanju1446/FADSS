@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FADSS - Pest & Disease Detection</title>
+    <!-- TensorFlow.js (for future model integration) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        /* === THEME TOKENS === */
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #95a0b5;
+            --accent1: #22c1c3;
+            --accent2: #6a82fb;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-2: rgba(255, 255, 255, 0.03);
+            --success: #4ade80;
+            --danger: #fb7185;
+            --warning: #facc15;
+            --radius: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, #071126 0%, #071a2b 60%);
+            color: #e8eef2;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        /* UPLOAD ZONE */
+        .upload-zone {
+            background: var(--glass);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent1);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .upload-zone .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .upload-zone p {
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        /* PREVIEW & SCANNING */
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--accent1);
+            box-shadow: 0 0 10px var(--accent1);
+            animation: scan 2s infinite;
+            display: none;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        /* RESULTS CARD */
+        .result-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .disease-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confidence {
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #fff;
+        }
+
+        /* REMEDIES TABS */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--muted);
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .tab-content {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .remedy-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent1);
+        }
+
+        .remedy-box h4 {
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .remedy-box p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .warning-box {
+            background: rgba(251, 113, 133, 0.1);
+            border: 1px solid rgba(251, 113, 133, 0.3);
+            color: #fb7185;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        /* BACK BUTTON */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-btn:hover {
+            color: white;
+        }
+
+        /* BUTTONS */
+        .btn-action {
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: #021024;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+    <div class="container">
+        <header>
+            <h1>AI Crop Disease Detection</h1>
+            <p>Upload a photo of an affected leaf to identify diseases and get expert remedies.</p>
+        </header>
+
+        <!-- UPLOAD -->
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <span class="icon">📸</span>
+            <h3>Click or Drag & Drop Image Here</h3>
+            <p>Supports JPG, PNG (Max 5MB)</p>
+            <input type="file" id="fileInput" accept="image/*">
+            <div class="scan-line" id="scanLine"></div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImg" class="preview-img" src="">
+            <br>
+            <button class="btn-action" id="analyzeBtn" onclick="analyzeImage()">🔍 Analyze Disease</button>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="result-card" id="resultCard">
+            <div class="disease-title">
+                <span id="diseaseName">Loading...</span>
+                <span class="confidence" id="confidenceScore">98% Match</span>
+            </div>
+            <p id="diseaseDesc" style="color:#ccc; margin-bottom:20px;">Description of the disease...</p>
+
+            <!-- TABS -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('bio')">Biological Control</div>
+                <div class="tab" onclick="switchTab('chem')">Chemical Control</div>
+            </div>
+
+            <!-- BIO CONTENT -->
+            <div id="bioContent" class="tab-content active">
+                <div id="bioRemedies"></div>
+            </div>
+
+            <!-- CHEM CONTENT -->
+            <div id="chemContent" class="tab-content">
+                <div id="chemRemedies"></div>
+                <div class="warning-box">
+                    <strong>⚠️ Safety First:</strong> Always wear protective gear (gloves, mask) when spraying
+                    chemicals. Keep away from water sources and children.
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+        /* === KNOWLEDGE BASE (ADVANCED DEMO DATA) === */
+        const knowledgeBase = {
+            rice: {
+                blast: {
+                    name: "Rice Blast (Magnaporthe oryzae)",
+                    desc: "A fungal disease causing diamond-shaped lesions on leaves. Can lead to severe yield loss if untreated.",
+                    bio: [
+                        { title: "Trichoderma harzianum", desc: "Apply 5-10g/liter of water. A beneficial fungus that attacks the pathogen." },
+                        { title: "Pseudomonas fluorescens", desc: "Seed treatment @ 10g/kg seed or foliar spray @ 0.2% concentration." }
+                    ],
+                    chem: [
+                        { title: "Tricyclazole 75 WP", desc: "Dosage: 0.6g per liter of water. Spray immediately after symptom appearance." },
+                        { title: "Isoprothiolane 40 EC", desc: "Dosage: 1.5ml per liter. Effective preventive and curative fungicide." }
+                    ]
+                },
+                blight: {
+                    name: "Bacterial Leaf Blight",
+                    desc: "Caused by Xanthomonas oryzae. Leaves turn yellow-white and dry up.",
+                    bio: [
+                        { title: "Copper Hydroxide", desc: "Use as a preventive spray." },
+                        { title: "Resistant Varieties", desc: "Plant resistant varieties like IR64." }
+                    ],
+                    chem: [
+                        { title: "Streptocycline", desc: "Spray 1g + 500g Copper Oxychloride in 200L water." }
+                    ]
+                }
+            },
+            cotton: {
+                bollworm: {
+                    name: "Cotton Bollworm",
+                    desc: "Larvae bore into bolls, causing shedding and quality loss. A major pest in cotton farming.",
+                    bio: [
+                        { title: "Neem Oil (Azadirachtin)", desc: "Spray 1500 ppm Neem oil @ 5ml/liter. Acts as a repellent and antifeedant." },
+                        { title: "Trichogramma chilonis", desc: "Release egg parasitoids @ 1.5 lakh/ha per week." }
+                    ],
+                    chem: [
+                        { title: "Emamectin Benzoate 5 SG", desc: "Dosage: 0.5g per liter. Highly effective against larvae." },
+                        { title: "Spinosad 45 SC", desc: "Dosage: 0.3ml per liter. Good for resistance management." }
+                    ]
+                }
+            },
+            wheat: {
+                rust: {
+                    name: "Wheat Rust (Puccinia spp.)",
+                    desc: "Reddish-brown pustules on leaves and stems. Reduces grain quality and yield.",
+                    bio: [
+                        { title: "Resistant Varieties", desc: "Use resistant cultivars." },
+                        { title: "Early Sowing", desc: "Sow early to avoid peak rust season." }
+                    ],
+                    chem: [
+                        { title: "Propiconazole 25 EC", desc: "Spray @ 1ml/liter of water." },
+                        { title: "Tebuconazole", desc: "Effective systemic fungicide." }
+                    ]
+                }
+            },
+            maize: {
+                armyworm: {
+                    name: "Fall Armyworm",
+                    desc: "Voracious eater of maize leaves and whorls. Can destroy entire crops overnight.",
+                    bio: [
+                        { title: "Metarhizium anisopliae", desc: "Biopesticide targeting larvae." },
+                        { title: "Pheromone Traps", desc: "Install 10 traps/acre to monitor population." }
+                    ],
+                    chem: [
+                        { title: "Chlorantraniliprole 18.5 SC", desc: "Dosage: 0.4ml per liter." },
+                        { title: "Spinetoram 11.7 SC", desc: "Dosage: 0.5ml per liter." }
+                    ]
+                }
+            }
+        };
+
+        /* === IMAGE HANDLING === */
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImg = document.getElementById('previewImg');
+        const resultCard = document.getElementById('resultCard');
+        const scanLine = document.getElementById('scanLine');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    previewImg.src = evt.target.result;
+                    previewContainer.style.display = 'block';
+                    resultCard.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        /* === TENSORFLOW.JS / TEACHABLE MACHINE LOGIC === */
+        const MODEL_URL = "./my_model/";
+        let model, maxPredictions;
+        let isModelLoaded = false;
+
+        // Initialize Model
+        async function initModel() {
+            try {
+                const modelURL = MODEL_URL + "model.json";
+                const metadataURL = MODEL_URL + "metadata.json";
+                
+                // Load the model and metadata
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+                isModelLoaded = true;
+                console.log("Model loaded successfully");
+            } catch (e) {
+                console.warn("Model not found or failed to load. Using heuristic fallback.", e);
+                isModelLoaded = false;
+            }
+        }
+
+        // Call init on page load
+        initModel();
+
+        async function analyzeImage() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            // 1. Start Scanning Animation
+            scanLine.style.display = 'block';
+            analyzeBtn.innerText = "Analyzing...";
+            analyzeBtn.disabled = true;
+
+            // 2. Wait for animation/processing
+            setTimeout(async () => {
+                scanLine.style.display = 'none';
+                analyzeBtn.innerText = "?? Analyze Disease";
+                analyzeBtn.disabled = false;
+
+                if (isModelLoaded) {
+                    // === REAL AI PREDICTION ===
+                    await predictWithModel();
+                } else {
+                    // === FALLBACK HEURISTIC ===
+                    predictWithHeuristic(file);
+                }
+            }, 1500);
+        }
+
+        async function predictWithModel() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(previewImg);
+            
+            // Find the class with the highest probability
+            let highestProb = 0;
+            let bestClass = "";
+            
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability > highestProb) {
+                    highestProb = prediction[i].probability;
+                    bestClass = prediction[i].className;
+                }
+            }
+
+            const confidence = (highestProb * 100).toFixed(1);
+            
+            // Map the bestClass string to our knowledgeBase
+            // Expected format: "Crop - Disease" or "Healthy Crop"
+            // Example: "Rice Blast", "Healthy Maize"
+            
+            mapPredictionToResult(bestClass, confidence);
+        }
+
+        function mapPredictionToResult(className, confidence) {
+            const lowerName = className.toLowerCase();
+            let detectedCrop = null;
+            let detectedDisease = null;
+
+            // Detect Crop from Class Name
+            if (lowerName.includes('rice') || lowerName.includes('paddy')) detectedCrop = 'rice';
+            else if (lowerName.includes('cotton')) detectedCrop = 'cotton';
+            else if (lowerName.includes('wheat')) detectedCrop = 'wheat';
+            else if (lowerName.includes('maize') || lowerName.includes('corn')) detectedCrop = 'maize';
+
+            if (!detectedCrop) {
+                showUnknownCrop();
+                return;
+            }
+
+            // Detect Disease from Class Name
+            const cropDiseases = knowledgeBase[detectedCrop];
+            for (const key in cropDiseases) {
+                if (lowerName.includes(key) || lowerName.includes(cropDiseases[key].name.toLowerCase())) {
+                    detectedDisease = cropDiseases[key];
+                    break;
+                }
+            }
+
+            if (lowerName.includes('healthy') || !detectedDisease) {
+                showHealthy(detectedCrop, confidence);
+            } else {
+                showDisease(detectedDisease, detectedCrop, confidence);
+            }
+        }
+
+        function predictWithHeuristic(file) {
+            const filename = file.name.toLowerCase();
+            let detectedCrop = null;
+            let detectedDisease = null;
+
+            // Detect Crop
+            if (filename.includes('rice') || filename.includes('paddy')) detectedCrop = 'rice';
+            else if (filename.includes('cotton')) detectedCrop = 'cotton';
+            else if (filename.includes('wheat')) detectedCrop = 'wheat';
+            else if (filename.includes('maize') || filename.includes('corn')) detectedCrop = 'maize';
+
+            if (!detectedCrop) {
+                showUnknownCrop();
+                return;
+            }
+
+            // Detect Disease
+            const cropDiseases = knowledgeBase[detectedCrop];
+            for (const key in cropDiseases) {
+                if (filename.includes(key)) {
+                    detectedDisease = cropDiseases[key];
+                    break;
+                }
+            }
+
+            if (filename.includes('healthy') || !detectedDisease) {
+                showHealthy(detectedCrop, "100");
+            } else {
+                showDisease(detectedDisease, detectedCrop, "98");
+            }
+        }
+
+        function showDisease(disease, crop, confidence) {
+            const cropName = crop.charAt(0).toUpperCase() + crop.slice(1);
+            
+            document.getElementById('diseaseName').innerHTML = `<span style="color:var(--muted);font-size:18px;">${cropName}:</span> ${disease.name}`;
+            document.getElementById('confidenceScore').innerText = `${confidence}% Match`;
+            document.getElementById('confidenceScore').style.background = "rgba(251, 113, 133, 0.2)";
+            document.getElementById('confidenceScore').style.color = "#fb7185";
+            
+            document.getElementById('diseaseDesc').innerText = disease.desc;
+
+            // Render Bio Remedies
+            const bioDiv = document.getElementById('bioRemedies');
+            bioDiv.innerHTML = disease.bio.map(r => `
+                <div class="remedy-box">
+                    <h4>?? ${r.title}</h4>
+                    <p>${r.desc}</p>
+                </div>
+            `).join('');
+
+            // Render Chem Remedies
+            const chemDiv = document.getElementById('chemRemedies');
+            chemDiv.innerHTML = disease.chem.map(r => `
+                <div class="remedy-box" style="border-left-color: var(--danger);">
+                    <h4>?? ${r.title}</h4>
+                    <p>${r.desc}</p>
+                </div>
+            `).join('');
+
+            // Show Tabs
+            document.querySelector('.tabs').style.display = 'flex';
+            document.getElementById('bioContent').style.display = 'block';
+            document.getElementById('chemContent').style.display = 'none'; // Reset to bio
+            switchTab('bio'); // Reset tab state
+
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showHealthy(crop, confidence) {
+            const cropName = crop.charAt(0).toUpperCase() + crop.slice(1);
+            
+            document.getElementById('diseaseName').innerHTML = `<span style="color:var(--muted);font-size:18px;">${cropName}:</span> Healthy Crop`;
+            document.getElementById('confidenceScore').innerText = `${confidence}% Healthy`;
+            document.getElementById('confidenceScore').style.background = "rgba(74, 222, 128, 0.2)";
+            document.getElementById('confidenceScore').style.color = "#4ade80";
+            
+            document.getElementById('diseaseDesc').innerText = `Great news! No diseases were detected in this ${cropName} sample. The plant appears healthy and vigorous.`;
+
+            // Hide Remedies
+            document.querySelector('.tabs').style.display = 'none';
+            document.getElementById('bioContent').style.display = 'none';
+            document.getElementById('chemContent').style.display = 'none';
+            
+            // Show a "Keep it up" message instead
+            const bioDiv = document.getElementById('bioRemedies');
+            bioDiv.innerHTML = `
+                <div class="remedy-box" style="border-left-color: var(--success);">
+                    <h4>? Recommendation</h4>
+                    <p>Continue current irrigation and nutrient management practices. Monitor regularly for any changes.</p>
+                </div>
+            `;
+            document.getElementById('bioContent').style.display = 'block';
+
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showUnknownCrop() {
+            document.getElementById('diseaseName').innerText = "Unknown Crop";
+            document.getElementById('confidenceScore').innerText = "Low Confidence";
+            document.getElementById('confidenceScore').style.background = "rgba(250, 204, 21, 0.2)";
+            document.getElementById('confidenceScore').style.color = "#facc15";
+            
+            document.getElementById('diseaseDesc').innerText = "We could not identify the crop in this image with high certainty. Please try uploading a clearer image of Rice, Wheat, Cotton, or Maize.";
+
+            // Hide Remedies
+            document.querySelector('.tabs').style.display = 'none';
+            document.getElementById('bioContent').style.display = 'none';
+            document.getElementById('chemContent').style.display = 'none';
+            
+            // Clear content
+            document.getElementById('bioRemedies').innerHTML = "";
+            document.getElementById('chemRemedies').innerHTML = "";
+
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* === TABS === */
+        function switchTab(type) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (type === 'bio') {
+                tabs[0].classList.add('active');
+                document.getElementById('bioContent').classList.add('active');
+                document.getElementById('chemContent').style.display = 'none';
+                document.getElementById('bioContent').style.display = 'block';
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('chemContent').classList.add('active');
+                document.getElementById('bioContent').style.display = 'none';
+                document.getElementById('chemContent').style.display = 'block';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

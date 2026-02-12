@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FADSS - Climate Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* === THEME TOKENS === */
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #95a0b5;
+      --accent1: #22c1c3;
+      --accent2: #6a82fb;
+      --glass: rgba(255, 255, 255, 0.04);
+      --glass-2: rgba(255, 255, 255, 0.03);
+      --success: #4ade80;
+      --danger: #fb7185;
+      --radius: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(180deg, #071126 0%, #071a2b 100%);
+      color: #e8eef2;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    /* SEARCH FORM */
+    .search-box {
+      background: var(--glass);
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      display: flex;
+      gap: 10px;
+      max-width: 600px;
+      margin: 0 auto 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .search-box input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      color: white;
+      outline: none;
+      font-size: 16px;
+    }
+
+    .search-box button {
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: #021024;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .search-box button:hover {
+      transform: scale(1.05);
+    }
+
+    /* LOCATION INFO */
+    .location-info {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* CHART SECTION */
+    .chart-container {
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 40px;
+      height: 400px;
+      position: relative;
+    }
+
+    /* CARDS GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: var(--accent1);
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 5px 0;
+    }
+
+    .card strong {
+      color: #fff;
+    }
+
+    /* TAGS */
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-right: 5px;
+    }
+
+    .tag.alert {
+      background: rgba(251, 113, 133, 0.2);
+      color: #fb7185;
+      border: 1px solid rgba(251, 113, 133, 0.3);
+    }
+
+    .tag.ok {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    /* BACK BUTTON */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .back-btn:hover {
+      color: white;
+    }
+
+    .loader {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 20px;
+      display: none;
+    }
+
+    .error {
+      text-align: center;
+      color: var(--danger);
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+  <div class="container">
+    <header>
+      <h1>Climate Analytics</h1>
+      <p>Advanced Weather Forecasting & Advisory</p>
+    </header>
+
+    <form id="weatherForm" class="search-box">
+      <input id="city" type="text" placeholder="Enter City (e.g. Guntur, Hyderabad)..." />
+      <button type="submit">Analyze</button>
+    </form>
+
+    <div id="loader" class="loader">Fetching satellite data...</div>
+    <div id="error" class="error"></div>
+    <div id="location" class="location-info"></div>
+
+    <!-- CHART -->
+    <div class="chart-container" id="chartWrapper" style="display:none;">
+      <canvas id="weatherChart"></canvas>
+    </div>
+
+    <!-- CARDS -->
+    <div id="results" class="grid"></div>
+  </div>
+
+  <script>
+    let myChart = null;
+
+    document.getElementById("weatherForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const city = document.getElementById("city").value.trim();
+      const errorDiv = document.getElementById("error");
+      const locationDiv = document.getElementById("location");
+      const resultsDiv = document.getElementById("results");
+      const loader = document.getElementById("loader");
+      const chartWrapper = document.getElementById("chartWrapper");
+
+      errorDiv.textContent = "";
+      locationDiv.textContent = "";
+      resultsDiv.innerHTML = "";
+      chartWrapper.style.display = "none";
+
+      if (!city) {
+        errorDiv.textContent = "Please enter a city name.";
+        return;
+      }
+
+      try {
+        loader.style.display = "block";
+
+        // 1. Geocoding
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+        const geoResp = await fetch(geoUrl);
+        const geoData = await geoResp.json();
+
+        if (!geoData.results || geoData.results.length === 0) {
+          throw new Error("Location not found.");
+        }
+
+        const place = geoData.results[0];
+        const { latitude: lat, longitude: lon, name, country } = place;
+
+        locationDiv.innerHTML = `${name}, ${country} <span style="font-size:14px;color:var(--muted)">(${lat.toFixed(2)}, ${lon.toFixed(2)})</span>`;
+
+        // 2. Weather Data
+        const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relativehumidity_2m,precipitation,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&forecast_days=7&timezone=auto`;
+
+        const forecastResp = await fetch(forecastUrl);
+        const data = await forecastResp.json();
+
+        // 3. Render
+        renderChart(data.daily);
+        renderCards(data.daily);
+        chartWrapper.style.display = "block";
+
+      } catch (err) {
+        errorDiv.textContent = err.message;
+      } finally {
+        loader.style.display = "none";
+      }
+    });
+
+    function renderChart(daily) {
+      const ctx = document.getElementById('weatherChart').getContext('2d');
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: daily.time.map(d => formatDate(d)),
+          datasets: [
+            {
+              label: 'Max Temp (°C)',
+              data: daily.temperature_2m_max,
+              borderColor: '#fb7185',
+              backgroundColor: 'rgba(251, 113, 133, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Min Temp (°C)',
+              data: daily.temperature_2m_min,
+              borderColor: '#6a82fb',
+              backgroundColor: 'rgba(106, 130, 251, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Rainfall (mm)',
+              data: daily.precipitation_sum,
+              borderColor: '#22c1c3',
+              backgroundColor: 'rgba(34, 193, 195, 0.1)',
+              type: 'bar',
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#fff' } }
+          },
+          scales: {
+            x: { ticks: { color: '#95a0b5' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              ticks: { color: '#95a0b5' },
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              title: { display: true, text: 'Temperature (°C)', color: '#95a0b5' }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#22c1c3' },
+              title: { display: true, text: 'Rainfall (mm)', color: '#22c1c3' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderCards(daily) {
+      const container = document.getElementById("results");
+
+      daily.time.forEach((date, i) => {
+        const tMax = daily.temperature_2m_max[i];
+        const tMin = daily.temperature_2m_min[i];
+        const rain = daily.precipitation_sum[i];
+        const wind = daily.windspeed_10m_max[i];
+
+        const { advisory, alerts } = getAdvisory(tMax, tMin, rain, wind);
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+        <h3>${formatDate(date)}</h3>
+        <p><strong>Temp:</strong> ${tMax}°C / ${tMin}°C</p>
+        <p><strong>Rain:</strong> ${rain} mm</p>
+        <p><strong>Wind:</strong> ${wind} km/h</p>
+        <p style="margin-top:10px; color:#e8eef2;">${advisory}</p>
+        <div style="margin-top:10px;">
+          ${alerts.map(a => `<span class="tag ${a.type === 'ALERT' ? 'alert' : 'ok'}">${a.label}</span>`).join('')}
+        </div>
+      `;
+        container.appendChild(card);
+      });
+    }
+
+    function getAdvisory(tMax, tMin, rain, wind) {
+      let alerts = [];
+      let advisory = "Conditions are stable.";
+
+      if (rain >= 20) {
+        alerts.push({ type: "ALERT", label: "Heavy Rain" });
+        advisory = "Heavy rain expected. Ensure drainage.";
+      } else if (rain > 0) {
+        alerts.push({ type: "OK", label: "Light Rain" });
+        advisory = "Light rain. Adjust irrigation.";
+      } else {
+        alerts.push({ type: "OK", label: "Dry" });
+      }
+
+      if (tMax > 38) {
+        alerts.push({ type: "ALERT", label: "High Heat" });
+        advisory += " Heat stress risk.";
+      }
+
+      return { advisory, alerts };
+    }
+
+    function formatDate(ds) {
+      return new Date(ds).toLocaleDateString("en-IN", { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FADSS Ultra Login</title>
+
+<style>
+:root{
+  --bg:#0f1724;
+  --card:#0b1220;
+  --muted:#95a0b5;
+  --accent1:#22c1c3;
+  --accent2:#6a82fb;
+  --glass: rgba(255,255,255,0.04);
+  --glass-2: rgba(255,255,255,0.03);
+  --success: #4ade80;
+  --danger:#fb7185;
+  --radius:14px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#e7eef8;
+
+  background:
+    linear-gradient(
+      rgba(7, 17, 38, 0.45),
+      rgba(7, 26, 43, 0.55)
+    ),
+    url("login.jpg") center/cover no-repeat fixed;
+}
+
+
+  /* Your background pic + dark overlay */
+  
+
+
+/* GLASS CARD */
+.container{
+  width:400px;
+  padding:34px;
+  border-radius:var(--radius);
+
+  /* Frosted-glass effect */
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 16px 45px rgba(0,0,0,0.55);
+
+  animation:fadeIn .6s ease-out;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Titles */
+.title{
+  font-size:26px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:6px;
+}
+
+.subtitle{
+  color:var(--muted);
+  margin-bottom:22px;
+  font-size:14px;
+}
+
+/* Inputs */
+input{
+  width:100%;
+  padding:14px;
+  margin:10px 0;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.07);
+  color:#fff;
+  font-size:15px;
+  outline:none;
+  transition:.2s;
+}
+
+input:focus{
+  border:1px solid var(--accent1);
+  background:rgba(255,255,255,0.12);
+}
+
+/* Main Button */
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  margin-top:12px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  font-weight:700;
+  font-size:16px;
+  color:#021024;
+  cursor:pointer;
+  transition:0.25s;
+}
+
+button:hover{
+  filter:brightness(1.1);
+  transform:translateY(-2px);
+}
+
+/* Social Buttons */
+.social-btn{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  margin-top:12px;
+  font-size:15px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  background:rgba(255,255,255,0.09);
+  color:#fff;
+  transition:0.25s;
+}
+
+.social-btn img{
+  width:18px;
+  height:18px;
+}
+
+.social-btn:hover{
+  transform:translateY(-2px);
+  background:rgba(255,255,255,0.14);
+}
+
+/* Forgot link */
+.forgot{
+  margin-top:10px;
+  color:var(--accent1);
+  cursor:pointer;
+  font-size:14px;
+  text-align:left;
+}
+
+/* Switch between login/signup */
+.switch{
+  margin-top:14px;
+  color:var(--muted);
+  text-align:center;
+  font-size:14px;
+}
+
+.switch span{
+  color:var(--accent1);
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+
+.switch span:hover{
+  opacity:.8;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container" id="loginBox">
+  <div class="title">FADSS Login</div>
+  <div class="subtitle">Welcome back, farmer.</div>
+
+  <input type="text" id="loginUser" placeholder="Username">
+  <input type="password" id="loginPass" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <div class="forgot" onclick="window.location.href='forgot.html'">Forgot password?</div>
+
+
+  <!-- GOOGLE LOGIN -->
+  <a class="social-btn google-btn" href="/auth/google">
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg">
+    Continue with Google
+  </a>
+
+  <div class="switch">Don’t have an account? <span onclick="showSignup()">Sign up</span></div>
+</div>
+
+<!-- SIGNUP -->
+<div class="container" id="signupBox" style="display:none;">
+  <div class="title">Create Account</div>
+  <div class="subtitle">Join the FADSS ecosystem</div>
+
+  <input type="text" id="signUser" placeholder="Username">
+  <input type="email" id="signEmail" placeholder="Email">
+  <input type="password" id="signPass" placeholder="Password">
+
+  <button onclick="signup()">Sign Up</button>
+
+  <!-- GOOGLE SIGNUP -->
+  <a class="social-btn google-btn" href="/auth/google">
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg">
+    Sign up with Google
+  </a>
+
+  <div class="switch">Already have an account? <span onclick="showLogin()">Login</span></div>
+</div>
+
+<script>
+
+function showSignup(){
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("signupBox").style.display = "block";
+}
+
+function showLogin(){
+  document.getElementById("signupBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+/* ---- FIXED LOGIN FUNCTION ---- */
+
+async function login() {
+  const username = document.getElementById("loginUser").value;
+  const password = document.getElementById("loginPass").value;
+
+  // Get location (city, lat, lon) using browser geolocation and Open-Meteo geocoding
+  function getLocationDetails() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // Try to get city name using Open-Meteo geocoding
+        try {
+          const geoUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1&language=en&format=json`;
+          const resp = await fetch(geoUrl);
+          const data = await resp.json();
+          const city = data && data.results && data.results[0] ? data.results[0].name : null;
+          resolve({ city, lat, lon });
+        } catch {
+          resolve({ city: null, lat, lon });
+        }
+      }, () => resolve(null), { timeout: 5000 });
+    });
+  }
+
+  const location = await getLocationDetails();
+
+  let res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, location })
+  });
+
+  let data = await res.json();
+
+  if (data.success) {
+    localStorage.setItem("fadss_token", data.token);
+    localStorage.setItem("fadss_isAdmin", data.isAdmin ? "true" : "false");
+    // also store username so dashboard/profile don't redirect back to login
+    localStorage.setItem("fadss_logged_user", username);
+    // store profile image path from backend (if any)
+    if (data.pfp) {
+      localStorage.setItem("fadss_profile_img", data.pfp);
+    } else {
+      localStorage.removeItem("fadss_profile_img");
+    }
+    window.location.href = data.isAdmin ? "admin.html" : "dashboard.html";
+  } else {
+    alert("Invalid username or password");
+  }
+}
+
+
+/* ---- FIXED SIGNUP FUNCTION ---- */
+async function signup() {
+  const username = document.getElementById("signUser").value;
+  const email = document.getElementById("signEmail").value;
+  const password = document.getElementById("signPass").value;
+
+  let res = await fetch("/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  let data = await res.json();
+
+  if (data.success) {
+    alert("Signup successful!");
+    showLogin();
+  } else {
+    alert(data.msg);
+  }
+}
+
+</script>
+
+</body>
+</html>
